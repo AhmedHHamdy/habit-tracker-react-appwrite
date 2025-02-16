@@ -69,7 +69,7 @@ export default function Home()  {
       
       <footer className="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4 self-end">
         <aside>
-          <p><Link className='flex items-center hover:text-purple-300'><FaGithub className='w-16 h-6' /> Ahmed Hamdy</Link></p>
+          <p><Link target='_blank' to={"https://github.com/AhmedHHamdy/habit-tracker-react-appwrite"} className='flex items-center hover:text-purple-300'><FaGithub className='w-16 h-6' /> Ahmed Hamdy</Link></p>
         </aside>
       </footer>
     </div>
