@@ -9,12 +9,12 @@ export default function Navbar() {
       <div className="navbar-start">
         <Link to={"/dashboard"} className="btn btn-ghost font-[Sigmar] text-3xl">Habit Hustle</Link>
       </div>
-      <div className="navbar-center hidden lg:flex">
+      {user && <div className="navbar-center hidden lg:flex">
         <span className="uppercase font-medium text-lg">{user?.name}</span>
-      </div>
-      <div className="navbar-end">
+      </div>}
+      {user && <div className="navbar-end">
         <button className="btn btn-neutral" onClick={() => logout()}>Logout</button>
-      </div>
+      </div>}
     </div>
   );
 }
