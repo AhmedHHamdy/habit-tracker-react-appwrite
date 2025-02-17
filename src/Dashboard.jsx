@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { account, databases, ID } from "./config/appwriteConfig";
 import { use, useEffect, useState } from "react";
 import { useAuth } from "./context/AuthProvider";
@@ -10,14 +10,12 @@ import four from "./assets/4.png";
 import five from "./assets/5.png";
 import { MdDelete } from "react-icons/md";
 
-
 export default function Dashboard() {
-  const navigate = useNavigate();
   const [habitTitle, setHabitTitle] = useState("");
 
   const { user, logout } = useAuth();
 
-  let arr = [ two, three, four, five ];
+  let arr = [two, three, four, five];
 
   async function fetchHabits() {
     try {
@@ -38,17 +36,17 @@ export default function Dashboard() {
     queryFn: fetchHabits,
   });
 
-  console.log(data)
+  console.log(data);
 
   async function addHabitFn() {
     if (!user) return; // Ensure user is logged in before adding habit
     try {
       if (habitTitle === "") {
-        return
+        return;
       }
 
-      if (data.filter(habit => habit.name === habitTitle).length > 0) {
-        return
+      if (data.filter((habit) => habit.name === habitTitle).length > 0) {
+        return;
       }
 
       const response = databases.createDocument(
@@ -78,19 +76,7 @@ export default function Dashboard() {
 
   return (
     <section className="flex flex-col items-center justify-center mt-10">
-      {/* <section>
-        <h1>Welcome, {user.name}</h1>
-        <button
-          type="button"
-          onClick={() => logout()}
-        >
-          Logout
-        </button>
-      </section> */}
-
-      <section className="flex flex-col mt-20"> 
-        {/* <h2>Dashboard</h2> */}
-
+      <section className="flex flex-col mt-20">
         <section className="flex items-center space-x-4">
           <input
             className="input w-full"
@@ -99,7 +85,9 @@ export default function Dashboard() {
             value={habitTitle}
             onChange={(e) => setHabitTitle(e.target.value)}
           />
-          <button className="button w-52" onClick={() => addHabit.mutate()}>Add Habit</button>
+          <button className="button w-52" onClick={() => addHabit.mutate()}>
+            Add Habit
+          </button>
         </section>
 
         <section className="mt-8">
@@ -109,33 +97,60 @@ export default function Dashboard() {
               data.map((habit, index) => {
                 return (
                   // <Link to={`habitDetails/${habit.$id}`} state={{name: habit?.name}} key={habit.$id}>
-                    <li className="list-row" key={habit.$id}>
-                      <div><img className="h-10" src={arr[index % arr.length]}/></div>
-                      <div>
-                        <div>{habit.name}</div>
-                        <div className="text-xs uppercase font-semibold opacity-60">{habit.$createdAt.split("T")[0]}</div>
+                  <li className="list-row" key={habit.$id}>
+                    <div>
+                      <img className="h-10" src={arr[index % arr.length]} />
+                    </div>
+                    <div>
+                      <div>{habit.name}</div>
+                      <div className="text-xs uppercase font-semibold opacity-60">
+                        {habit.$createdAt.split("T")[0]}
                       </div>
-                      <Link to={`habitDetails/${habit.$id}`} state={{name: habit?.name}} className="btn btn-square btn-ghost">
-                        <svg className="size-[1.2em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" fill="none" stroke="currentColor"><path d="M6 3L20 12 6 21 6 3z"></path></g></svg>
-                      </Link>
-                      <button onClick={async () => {
-                          await databases.deleteDocument(
-                            "67b0bdc9002836425c2f",
-                            "67b130b3003836d9a66a",
-                            habit.$id
-                          )
-                          refetch()
-                        }} className="btn btn-square btn-ghost">
-                        <MdDelete className="h-5 w-5" />
-                      </button>
-                    </li>
+                    </div>
+                    <Link
+                      to={`habitDetails/${habit.$id}`}
+                      state={{ name: habit?.name }}
+                      className="btn btn-square btn-ghost"
+                    >
+                      <svg
+                        className="size-[1.2em]"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <g
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                          strokeWidth="2"
+                          fill="none"
+                          stroke="currentColor"
+                        >
+                          <path d="M6 3L20 12 6 21 6 3z"></path>
+                        </g>
+                      </svg>
+                    </Link>
+                    <button
+                      onClick={async () => {
+                        await databases.deleteDocument(
+                          "67b0bdc9002836425c2f",
+                          "67b130b3003836d9a66a",
+                          habit.$id
+                        );
+                        refetch();
+                      }}
+                      className="btn btn-square btn-ghost"
+                    >
+                      <MdDelete className="h-5 w-5" />
+                    </button>
+                  </li>
                   // </Link>
                 );
               })}
 
-              {data && data.length === 0 && <li className="list-row">
+            {data && data.length === 0 && (
+              <li className="list-row">
                 <div className="text-center">No habits found</div>
-              </li>}         
+              </li>
+            )}
           </ul>
         </section>
       </section>
