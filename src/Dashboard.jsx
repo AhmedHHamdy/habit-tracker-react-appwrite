@@ -109,15 +109,15 @@ export default function Dashboard() {
               data.map((habit, index) => {
                 return (
                   // <Link to={`habitDetails/${habit.$id}`} state={{name: habit?.name}} key={habit.$id}>
-                    <li className="list-row">
+                    <li className="list-row" key={habit.$id}>
                       <div><img className="h-10" src={arr[index % arr.length]}/></div>
                       <div>
                         <div>{habit.name}</div>
                         <div className="text-xs uppercase font-semibold opacity-60">{habit.$createdAt.split("T")[0]}</div>
                       </div>
-                      <button className="btn btn-square btn-ghost">
+                      <Link to={`habitDetails/${habit.$id}`} state={{name: habit?.name}} className="btn btn-square btn-ghost">
                         <svg className="size-[1.2em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" fill="none" stroke="currentColor"><path d="M6 3L20 12 6 21 6 3z"></path></g></svg>
-                      </button>
+                      </Link>
                       <button className="btn btn-square btn-ghost">
                         <MdDelete onClick={async () => {
                           await databases.deleteDocument(
