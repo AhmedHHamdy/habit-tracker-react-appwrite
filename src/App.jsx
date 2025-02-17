@@ -5,6 +5,7 @@ import Dashboard from "./Dashboard";
 import AuthRequired from "./components/AuthRequired";
 import HabitDetails from "./HabitDetails";
 import Register from "./register";
+import NotFound from "./404";
 
 
 function App() {
@@ -17,6 +18,8 @@ function App() {
           <Route index element={<Dashboard />} /> 
           <Route path="habitDetails/:id" element={<HabitDetails />} /> 
         </Route>
+
+        <Route path="*" element={<NotFound />} /> 
       </Route>
 
     </Routes>

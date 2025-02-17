@@ -77,7 +77,7 @@ export default function Dashboard() {
   });
 
   return (
-    <section className="flex flex-col items-center justify-center mt-20">
+    <section className="flex flex-col items-center justify-center mt-10">
       {/* <section>
         <h1>Welcome, {user.name}</h1>
         <button
@@ -104,7 +104,7 @@ export default function Dashboard() {
 
         <section className="mt-8">
           <h2 className="text-3xl font-[Sigmar]">Current habits</h2>
-          <ul className="list bg-base-100 rounded-box shadow-md mt-10">
+          <ul className="list bg-base-100 rounded-box shadow-md mt-10 max-h-72 overflow-y-auto">
             {data &&
               data.map((habit, index) => {
                 return (
@@ -118,20 +118,24 @@ export default function Dashboard() {
                       <Link to={`habitDetails/${habit.$id}`} state={{name: habit?.name}} className="btn btn-square btn-ghost">
                         <svg className="size-[1.2em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" fill="none" stroke="currentColor"><path d="M6 3L20 12 6 21 6 3z"></path></g></svg>
                       </Link>
-                      <button className="btn btn-square btn-ghost">
-                        <MdDelete onClick={async () => {
+                      <button onClick={async () => {
                           await databases.deleteDocument(
                             "67b0bdc9002836425c2f",
                             "67b130b3003836d9a66a",
                             habit.$id
                           )
                           refetch()
-                        }} className="h-52 w-5" />
+                        }} className="btn btn-square btn-ghost">
+                        <MdDelete className="h-5 w-5" />
                       </button>
                     </li>
                   // </Link>
                 );
               })}
+
+              {data && data.length === 0 && <li className="list-row">
+                <div className="text-center">No habits found</div>
+              </li>}         
           </ul>
         </section>
       </section>

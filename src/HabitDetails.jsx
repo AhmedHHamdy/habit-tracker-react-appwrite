@@ -154,7 +154,7 @@ export default function HabitDetails() {
   const minDate = new Date().toISOString().split("T")[0];
 
   return (
-    <section className="flex flex-col items-center justify-center mt-20">
+    <section className="flex flex-col items-center justify-center mt-10">
 
       <section>
         <h2 className="mb-6 font-[Sigmar] text-3xl">Habit Details for {currentYear}</h2>

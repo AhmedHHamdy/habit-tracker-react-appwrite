@@ -12,14 +12,15 @@ export default function Register()  {
   const [error, setError] = useState(null);
   
 
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
 
   const navigate = useNavigate();
 
   async function register(email, password, name) {
     try {
       await account.create(ID.unique(), email, password, name);
-      navigate('/');
+      await account.createEmailPasswordSession(email, password);
+      setUser(await account.get());
     } catch (error) {
       setError(error.message);
     }
@@ -49,7 +50,7 @@ export default function Register()  {
             className='button'
             type="button"
             onClick={async () => {
-              register(email, password, name);
+              await register(email, password, name);
             }}
           >
             Register
