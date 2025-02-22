@@ -13,7 +13,7 @@ export default function Navbar() {
         <span className="uppercase font-medium text-lg">{user?.name}</span>
       </div>}
       {user && <div className="navbar-end">
-        <button className="btn btn-neutral" onClick={() => logout()}>Logout</button>
+        <button className="btn btn-secondary" onClick={() => logout()}>Logout</button>
       </div>}
     </div>
   );

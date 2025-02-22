@@ -5,6 +5,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Query } from "appwrite";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { MdEditCalendar } from "react-icons/md";
+import { MdDelete } from "react-icons/md";
 
 export default function HabitDetails() {
   const { user } = useAuth();
@@ -15,12 +17,18 @@ export default function HabitDetails() {
 
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
+  const [description, setDescription] = useState("");
+
+  const [errorValue, setErrorValue] = useState(null);
+
+  const [selectedDayId, setSelectedDayId] = useState("");
+
   async function fetchHabitDetails() {
     try {
       const response = await databases.listDocuments(
         "67b0bdc9002836425c2f",
         "67b12fed0007cd299fe3",
-        [Query.equal("habitId", id)]
+        [Query.equal("habitId", id), Query.orderDesc('date'), Query.equal("year", String(currentYear))]
       );
 
       return response.documents;
@@ -35,7 +43,7 @@ export default function HabitDetails() {
     isPending,
     refetch,
   } = useQuery({
-    queryKey: ["habitDetailsData"],
+    queryKey: ["habitDetailsData", String(currentYear)],
     queryFn: fetchHabitDetails,
   });
 
@@ -48,9 +56,17 @@ export default function HabitDetails() {
         return;
       }
 
-      if (habitDetails.filter((habit) => habit.date === dateValue).length > 0) {
+      if (habitDetails?.filter((habit) => habit.date === dateValue).length > 0) {
         return;
       }
+      console.log({
+        name: location?.state?.name,
+        date: dateValue,
+        completed: true,
+        habitId: id,
+        description: description,
+        year: String(currentYear)
+      })
       const response = await databases.createDocument(
         "67b0bdc9002836425c2f",
         "67b12fed0007cd299fe3",
@@ -60,12 +76,15 @@ export default function HabitDetails() {
           date: dateValue,
           completed: true,
           habitId: id,
+          description: description,
+          year: String(currentYear)
         }
       );
 
       return response;
     } catch (error) {
       console.error(error);
+      throw new Error(error.message);
     }
   }
 
@@ -75,6 +94,47 @@ export default function HabitDetails() {
       // Invalidate and refetch
       refetch();
     },
+    onError: (error) => {
+      setErrorValue(error.message);
+      setTimeout(() => {
+        setErrorValue(null);
+      }, 3000);
+    }
+  });
+
+  async function editCommit({ documentId, dateValue, description }) {
+    if (!user) return; // Ensure user is logged in before adding habit
+    try {
+      const response = await databases.updateDocument(
+        "67b0bdc9002836425c2f",
+        "67b12fed0007cd299fe3",
+        documentId,
+        {
+          date: dateValue,
+          description: description
+        }
+      );
+      // console.log(response);
+      return response;
+    } catch (error) {
+      console.error(error);
+      throw new Error(error.message);
+    }
+  }
+
+  const editCommitMutation = useMutation({
+    mutationFn: editCommit,
+    onSuccess: () => {
+      // Invalidate and refetch
+      setSelectedDayId("")
+      refetch();
+    },
+    onError: (error) => {
+      setErrorValue(error.message);
+      setTimeout(() => {
+        setErrorValue(null);
+      }, 3000);
+    }
   });
 
   const renderSquares = () => {
@@ -110,7 +170,10 @@ export default function HabitDetails() {
             key={`${week}-${day}`}
             className={`${isCompleted ? "completed" : ""} tooltip`}
           >
-            <span className="tooltiptext">{currentDate.toDateString()}</span>
+            <span className="tooltiptext flex flex-col gap-2">
+              <span>{currentDate.toDateString()}</span>
+              <span>{habitDetails?.find(e => e?.date == date)?.description}</span>
+            </span>
           </li>
         );
       }
@@ -165,25 +228,141 @@ export default function HabitDetails() {
   const minDate = new Date().toISOString().split("T")[0];
 
   return (
-    <section className="flex flex-col items-center justify-center mt-10">
+    <section className="flex flex-col items-center justify-center mt-0">
+
+      <dialog id="my_modal_1" className="modal">
+        <div className="modal-box">
+          <form method="dialog" className="flex justify-between items-center">
+            {/* if there is a button in form, it will close the modal */}
+            <span>Commit Form</span>
+            <button className="btn btn-xs btn-primary">✕</button>
+          </form>
+          <form method="dialog" className="w-full p-4 flex flex-col gap-6 bg-base-200 rounded-md mt-4">
+            <input
+              className="input w-full"
+              type="date"
+              placeholder="Title"
+              value={dateValue}
+              min={minDate}
+              onChange={(e) => setDateValue(e.target.value)}
+            />
+            <textarea className="textarea min-h-10 w-full" placeholder="Commit Description (Optional)" value={description} onChange={(e) => setDescription(e.target.value)}></textarea>
+            <button className="btn btn-primary w-full" onClick={() => commitDayMutation.mutate()}>
+              Commit
+            </button>
+          </form>
+        </div>
+      </dialog>
+
+      <dialog id="my_modal_2" className="modal">
+        <div className="modal-box">
+          <form method="dialog" className="flex justify-between items-center">
+            {/* if there is a button in form, it will close the modal */}
+            <span>Commit History</span>
+            <button className="btn btn-xs btn-primary">✕</button>
+          </form>
+          <section className="w-full p-4 flex flex-col gap-6 bg-base-200 rounded-md mt-4">
+            <div className="overflow-x-auto overflow-y-auto min-h-60">
+              <table className="table">
+                <thead>
+                  <tr>
+                    {/* <th>No.</th> */}
+                    <th>Date</th>
+                    <th>Desc.</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {habitDetails && habitDetails.slice(0, 30).map((habit, index) => {
+                    return (
+                      <tr key={habit.$id} className="bg-base-200">
+                        <th>{habit.date}</th>
+                        <td>{habit?.description ? habit?.description?.slice(0, 9) + "..." : "..."}</td>
+                        <td><MdEditCalendar onClick={() => {
+                          setDateValue(habit.date);
+                          setDescription(habit.description);
+                          setSelectedDayId(habit.$id);
+                          document.getElementById('my_modal_3').showModal()
+                        }} className="cursor-pointer h-5 w-5 text-primary" /></td>
+                        <td><MdDelete onClick={async () => {
+                          try {
+                            await databases.deleteDocument(
+                              "67b0bdc9002836425c2f",
+                              "67b12fed0007cd299fe3",
+                              habit.$id
+                            )
+                            refetch();
+                          } catch (error) {
+                            setErrorValue(error.message);
+                            setTimeout(() => {
+                              setErrorValue(null);
+                            }, 3000);
+                          }
+                      }} className="cursor-pointer h-5 w-5 text-secondary" /></td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </dialog>
+
+      <dialog id="my_modal_3" className="modal">
+        <div className="modal-box">
+          <form method="dialog" className="flex justify-between items-center">
+            {/* if there is a button in form, it will close the modal */}
+            <span>Edit Commit Form</span>
+            <button className="btn btn-xs btn-primary">✕</button>
+          </form>
+          <form method="dialog" className="w-full p-4 flex flex-col gap-6 bg-base-200 rounded-md mt-4">
+            <input
+              className="input w-full"
+              type="date"
+              placeholder="Title"
+              value={dateValue}
+              // min={minDate}
+              onChange={(e) => setDateValue(e.target.value)}
+            />
+            <textarea className="textarea min-h-10 w-full" placeholder="Commit Description (Optional)" value={description} onChange={(e) => setDescription(e.target.value)}></textarea>
+            <button className="btn btn-primary w-full" onClick={() => editCommitMutation.mutate({ documentId: selectedDayId, dateValue, description })}>
+              Save Changes
+            </button>
+          </form>
+        </div>
+      </dialog>
+
+      {errorValue && (
+        <div className="toast toast-top z-1000">
+          <div className="alert alert-error">
+            <span>{errorValue}</span>
+          </div>
+        </div>
+      )}
+
       <section>
-        <h2 className="mb-6 font-[Sigmar] text-3xl">
+        <h2 className="mb-2 font-[Sigmar] text-3xl mt-10">
           Habit Details for {currentYear}
         </h2>
 
-        <section className="flex items-center justify-center space-x-4">
-          <input
-            className="input"
-            type="date"
-            placeholder="Title"
-            value={dateValue}
-            min={minDate}
-            onChange={(e) => setDateValue(e.target.value)}
-          />
-          <button className="button" onClick={() => commitDayMutation.mutate()}>
-            Commit
-          </button>
-        </section>
+        {/* <section className="flex items-center justify-center space-x-4">
+          <fieldset className="fieldset w-xs bg-base-200 border border-base-300 p-4 rounded-box gap-4">
+            <input
+              className="input w-full"
+              type="date"
+              placeholder="Title"
+              value={dateValue}
+              min={minDate}
+              onChange={(e) => setDateValue(e.target.value)}
+            />
+            <textarea className="textarea min-h-10" placeholder="Commit Description (Optional)"></textarea>
+            <button className="btn btn-primary" onClick={() => commitDayMutation.mutate()}>
+              Commit
+            </button>
+          </fieldset>
+        </section> */}
 
         <section className="mt-8">
           <h2>
@@ -193,7 +372,7 @@ export default function HabitDetails() {
             </span>
           </h2>
 
-          <div className="stats bg-base-100 border border-base-300 mt-6">
+          <div className="stats bg-base-200 border border-base-300 mt-8">
             <div className="stat">
               <div className="stat-title">Total Tracking Days</div>
               <div className="stat-value">
@@ -208,24 +387,33 @@ export default function HabitDetails() {
           </div>
         </section>
 
-        <section className="mt-8">
+        <section className="mt-4">
           {/* github graph */}
-          <section className="flex items-center justify-center space-x-4 mb-4">
-            <button
-              className="button"
-              onClick={() => setCurrentYear(currentYear - 1)}
-            >
-              <IoIosArrowBack />
-            </button>
-            <button
-              className="button"
-              onClick={() => setCurrentYear(currentYear + 1)}
-            >
-              <IoIosArrowForward />
-            </button>
+          <section className="flex items-center justify-between space-x-4 mb-8">
+
+            <div className="flex items-center space-x-4">
+              <button className="btn btn-primary" onClick={()=>document.getElementById('my_modal_1').showModal()}>Commit</button>
+              <button className="btn btn-secondary" onClick={()=>document.getElementById('my_modal_2').showModal()}>History</button>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <button
+                className="btn btn-primary"
+                onClick={() => setCurrentYear(currentYear - 1)}
+              >
+                <IoIosArrowBack />
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => setCurrentYear(currentYear + 1)}
+                disabled={currentYear == new Date().getFullYear()}
+              >
+                <IoIosArrowForward />
+              </button>
+            </div>
           </section>
 
-          <div className="graph">
+          {!isPending ? <div className="graph">
             {/* Months Row */}
             <ul className="months">
               <li>Jan</li>
@@ -246,20 +434,20 @@ export default function HabitDetails() {
             <div style={{ display: "flex" }}>
               {/* Days Column */}
               <ul className="days">
-                <li>Sun</li>
-                <li>Mon</li>
-                <li>Tue</li>
                 <li>Wed</li>
                 <li>Thu</li>
                 <li>Fri</li>
                 <li>Sat</li>
+                <li>Sun</li>
+                <li>Mon</li>
+                <li>Tue</li>
               </ul>
 
               {/* Squares Grid */}
               <ul className="squares">{renderSquares()}</ul>
             </div>
-          </div>
-        </section>
+          </div> : <span className="loading loading-infinity loading-md text-secondary"></span>}
+        </section> 
       </section>
     </section>
   );

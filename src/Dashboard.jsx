@@ -12,6 +12,7 @@ import { MdDelete } from "react-icons/md";
 
 export default function Dashboard() {
   const [habitTitle, setHabitTitle] = useState("");
+  const [errorValue, setErrorValue] = useState(null);
 
   const { user, logout } = useAuth();
 
@@ -45,7 +46,7 @@ export default function Dashboard() {
         return;
       }
 
-      if (data.filter((habit) => habit.name === habitTitle).length > 0) {
+      if (data?.filter((habit) => habit.name === habitTitle)?.length > 0) {
         return;
       }
 
@@ -58,10 +59,11 @@ export default function Dashboard() {
           userId: user.$id,
         }
       );
-
+      console.log(response)
       return response;
     } catch (error) {
       console.error(error);
+      throw new Error(error.message);
     }
   }
 
@@ -72,12 +74,28 @@ export default function Dashboard() {
       refetch();
       setHabitTitle("");
     },
+    onError: (error) => {
+      setErrorValue(error.message);
+      setTimeout(() => {
+        setErrorValue(null);
+      }, 3000);
+    }
   });
 
   return (
-    <section className="flex flex-col items-center justify-center mt-10">
-      <section className="flex flex-col mt-20">
-        <section className="flex items-center space-x-4">
+    <section className="flex flex-col items-center justify-center mt-6">
+
+      {errorValue && (
+        <div className="toast toast-top z-1000">
+          <div className="alert alert-error">
+            <span>{errorValue}</span>
+          </div>
+        </div>
+      )}
+
+      <section className="flex flex-col mt-0 w-full max-w-md space-y-8">
+        <section className="flex flex-col gap-7 items-center space-x-4">
+         <fieldset className="fieldset w-xs bg-base-200 border border-base-300 p-4 rounded-box gap-5">
           <input
             className="input w-full"
             type="text"
@@ -85,24 +103,26 @@ export default function Dashboard() {
             value={habitTitle}
             onChange={(e) => setHabitTitle(e.target.value)}
           />
-          <button className="button w-52" onClick={() => addHabit.mutate()}>
+          <button className="btn btn-primary w-full" onClick={() => addHabit.mutate()}>
             Add Habit
           </button>
+        </fieldset>
         </section>
 
-        <section className="mt-8">
-          <h2 className="text-3xl font-[Sigmar]">Current habits</h2>
-          <ul className="list bg-base-100 rounded-box shadow-md mt-10 max-h-72 overflow-y-auto">
+        <section className="mt-0">
+          <h2 className="text-2xl font-[Sigmar]">Current habits</h2>
+          <ul className="list bg-base-200 rounded-box shadow-md mt-10 max-h-72 overflow-y-auto">
             {data &&
               data.map((habit, index) => {
                 return (
                   // <Link to={`habitDetails/${habit.$id}`} state={{name: habit?.name}} key={habit.$id}>
                   <li className="list-row" key={habit.$id}>
+                    <div className="text-4xl font-thin opacity-30 tabular-nums">{String(index + 1).length == 1 ? 0 + `${index + 1}` : index + 1}</div>
                     <div>
                       <img className="h-10" src={arr[index % arr.length]} />
                     </div>
-                    <div>
-                      <div>{habit.name}</div>
+                    <div className="list-col-grow">
+                      <div className="uppercase font-medium">{habit.name}</div>
                       <div className="text-xs uppercase font-semibold opacity-60">
                         {habit.$createdAt.split("T")[0]}
                       </div>
@@ -110,7 +130,7 @@ export default function Dashboard() {
                     <Link
                       to={`habitDetails/${habit.$id}`}
                       state={{ name: habit?.name }}
-                      className="btn btn-square btn-ghost"
+                      className="btn btn-square btn-primary"
                     >
                       <svg
                         className="size-[1.2em]"
@@ -130,14 +150,21 @@ export default function Dashboard() {
                     </Link>
                     <button
                       onClick={async () => {
-                        await databases.deleteDocument(
-                          "67b0bdc9002836425c2f",
-                          "67b130b3003836d9a66a",
-                          habit.$id
-                        );
-                        refetch();
+                        try {
+                          await databases.deleteDocument(
+                            "67b0bdc9002836425c2f",
+                            "67b130b3003836d9a66a",
+                            habit.$id
+                          );
+                          refetch();
+                        } catch (error) {
+                          setErrorValue(error.message);
+                            setTimeout(() => {
+                              setErrorValue(null);
+                            }, 3000);
+                        }
                       }}
-                      className="btn btn-square btn-ghost"
+                      className="btn btn-square btn-secondary"
                     >
                       <MdDelete className="h-5 w-5" />
                     </button>
