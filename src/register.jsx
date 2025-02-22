@@ -144,6 +144,61 @@ export default function Register() {
           </fieldset>
         </form>
       </div>
+
+      <div className="sm:hidden md:grid collapse collapse-arrow absolute bottom-20 left-5 bg-base-200 w-72 text-base-content p-0 border-2 border-base-300 rounded-box">
+        <input type="checkbox" />
+        <h2 className="collapse-title text-sm flex items-center font-medium">Changelog</h2>
+        <ul className="collapse-content timeline-compact timeline-vertical w-full">
+          <li className="flex justify-start items-center">
+            <div className="timeline-middle">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="h-5 w-5">
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                  clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="timeline-end timeline-box w-full text-start">History Feature Added</div>
+          </li>
+
+          <li className="flex justify-start items-center">
+            <div className="timeline-middle">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="h-5 w-5">
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                  clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="timeline-end timeline-box w-full text-start">Daisy Ui V5 & Theme Added</div>
+          </li>
+
+          <li className="flex justify-start items-center">
+            <div className="timeline-middle">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="h-5 w-5">
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                  clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="timeline-end timeline-box w-full text-start">Error Handling</div>
+          </li>
+        </ul>
+      </div>
+
       <footer className="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4 self-end">
         <aside>
           <p>

@@ -116,7 +116,7 @@ export default function Home() {
         </form>
       </div>
 
-      <div className="collapse collapse-arrow absolute bottom-20 left-5 bg-base-200 w-72 text-base-content p-0 border-2 border-base-300 rounded-box">
+      <div className="sm:hidden md:grid collapse collapse-arrow absolute bottom-20 left-5 bg-base-200 w-72 text-base-content p-0 border-2 border-base-300 rounded-box">
         <input type="checkbox" />
         <h2 className="collapse-title text-sm flex items-center font-medium">Changelog</h2>
         <ul className="collapse-content timeline-compact timeline-vertical w-full">
