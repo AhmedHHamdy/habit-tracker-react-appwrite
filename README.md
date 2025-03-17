@@ -29,7 +29,7 @@ With this app, you can:
 ## Technologies Used
 
 - **Frontend**:
-  - React (JavaScript/JSX)
+  - React (JavaScript/JSX) Converted to (TypeScript/TSX)
   - CSS (Tailwind CSS for styling)
   - Tanstack Query
 
