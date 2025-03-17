@@ -1,27 +1,25 @@
 import React, { useState } from "react";
 import { account, ID } from "./config/appwriteConfig";
-import { Link, Navigate, useNavigate } from "react-router";
+import { Link, Navigate } from "react-router";
 import { useAuth } from "./context/AuthProvider";
 import { FaGithub } from "react-icons/fa";
 import Navbar from "./components/Navbar";
 
-export default function Home() {
+export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const [error, setError] = useState(null);
+  const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const { user, setUser } = useAuth();
 
-  const navigate = useNavigate();
-
-  async function login(email, password) {
+  async function register(email: string, password: string, name: string) {
     try {
+      await account.create(ID.unique(), email, password, name);
       await account.createEmailPasswordSession(email, password);
       setUser(await account.get());
-      navigate("/dashboard");
     } catch (error) {
-      setError(error.message);
+      setError((error as Error).message);
       setTimeout(() => {
         setError(null);
       }
@@ -48,6 +46,35 @@ export default function Home() {
         <h1 className="mb-6 font-[Sigmar]">Habit Hustle</h1>
         <form className="flex flex-col space-y-4 w-full max-w-xs">
           <fieldset className="fieldset w-xs bg-base-200 border border-base-300 p-4 rounded-box gap-4">
+
+            <label className="input">
+              <svg
+                className="h-[1em] opacity-50"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+              >
+                <g
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  strokeWidth="2.5"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </g>
+              </svg>
+              <input
+                type="input"
+                required
+                placeholder="Name"
+                minLength={3}
+                maxLength={30}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </label>
+
             <label className="input">
               <svg
                 className="h-[1em] opacity-50"
@@ -95,7 +122,7 @@ export default function Home() {
                 type="password"
                 required
                 placeholder="Password"
-                minlength="8"
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -104,13 +131,15 @@ export default function Home() {
             <button
               className="btn btn-primary"
               type="button"
-              onClick={() => login(email, password)}
+              onClick={async () => {
+                await register(email, password, name);
+              }}
             >
-              Login
+              Register
             </button>
 
-            <Link className="btn btn-primary text-white" to={"/register"}>
-              Register
+            <Link className="btn btn-primary text-white" to={"/"}>
+              Login
             </Link>
           </fieldset>
         </form>
@@ -126,7 +155,7 @@ export default function Home() {
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
-                class="h-5 w-5">
+                className="h-5 w-5">
                 <path
                   fillRule="evenodd"
                   d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
@@ -142,7 +171,7 @@ export default function Home() {
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
-                class="h-5 w-5">
+                className="h-5 w-5">
                 <path
                   fillRule="evenodd"
                   d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
@@ -158,7 +187,7 @@ export default function Home() {
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
-                class="h-5 w-5">
+                className="h-5 w-5">
                 <path
                   fillRule="evenodd"
                   d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"

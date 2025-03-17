@@ -1,6 +1,4 @@
 import { Link, Navigate, Outlet } from "react-router-dom"; // Correct import
-import { account } from "../config/appwriteConfig";
-import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthProvider";
 import Navbar from "./Navbar";
 import { FaGithub } from "react-icons/fa";

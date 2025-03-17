@@ -1,6 +1,6 @@
 import { Link } from "react-router";
-import { account, databases, ID } from "./config/appwriteConfig";
-import { use, useEffect, useState } from "react";
+import { databases, ID } from "./config/appwriteConfig";
+import { useState } from "react";
 import { useAuth } from "./context/AuthProvider";
 import { Query } from "appwrite";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -9,35 +9,39 @@ import three from "./assets/3.png";
 import four from "./assets/4.png";
 import five from "./assets/5.png";
 import { MdDelete } from "react-icons/md";
+import { type Models } from 'appwrite';
 
 export default function Dashboard() {
   const [habitTitle, setHabitTitle] = useState("");
-  const [errorValue, setErrorValue] = useState(null);
+  const [errorValue, setErrorValue] = useState<string | null>(null);
 
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   let arr = [two, three, four, five];
 
-  async function fetchHabits() {
+  async function fetchHabits(): Promise<Models.DocumentList<Models.Document>> {
     try {
+      if (!user?.$id) {
+        throw new Error("User not logged in");
+      }
+
       const response = await databases.listDocuments(
         "67b0bdc9002836425c2f",
         "67b130b3003836d9a66a",
-        [Query.equal("userId", user.$id)]
+        [Query.equal("userId", user?.$id)]
       );
 
-      return response.documents;
+      return response;
     } catch (error) {
-      console.error(error);
+      // console.error(error);
+      throw new Error((error as Error).message);
     }
   }
 
-  const { data, error, isPending, refetch } = useQuery({
+  const { data, refetch } = useQuery({
     queryKey: ["habitsList"],
     queryFn: fetchHabits,
   });
-
-  console.log(data);
 
   async function addHabitFn() {
     if (!user) return; // Ensure user is logged in before adding habit
@@ -46,7 +50,7 @@ export default function Dashboard() {
         return;
       }
 
-      if (data?.filter((habit) => habit.name === habitTitle)?.length > 0) {
+      if (data?.documents && data?.documents?.filter((habit) => habit.name === habitTitle)?.length > 0) {
         return;
       }
 
@@ -59,11 +63,10 @@ export default function Dashboard() {
           userId: user.$id,
         }
       );
-      console.log(response)
       return response;
     } catch (error) {
       console.error(error);
-      throw new Error(error.message);
+      throw new Error((error as Error).message);
     }
   }
 
@@ -113,7 +116,7 @@ export default function Dashboard() {
           <h2 className="text-2xl font-[Sigmar]">Current habits</h2>
           <ul className="list bg-base-200 rounded-box shadow-md mt-10 max-h-72 overflow-y-auto">
             {data &&
-              data.map((habit, index) => {
+              data.documents.map((habit, index) => {
                 return (
                   // <Link to={`habitDetails/${habit.$id}`} state={{name: habit?.name}} key={habit.$id}>
                   <li className="list-row" key={habit.$id}>
@@ -158,7 +161,7 @@ export default function Dashboard() {
                           );
                           refetch();
                         } catch (error) {
-                          setErrorValue(error.message);
+                          setErrorValue((error as Error).message);
                             setTimeout(() => {
                               setErrorValue(null);
                             }, 3000);
@@ -173,7 +176,7 @@ export default function Dashboard() {
                 );
               })}
 
-            {data && data.length === 0 && (
+            {data && data.documents.length === 0 && (
               <li className="list-row">
                 <div className="text-center">No habits found</div>
               </li>

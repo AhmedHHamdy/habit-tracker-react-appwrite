@@ -1,5 +1,5 @@
 import { useLocation, useParams } from "react-router";
-import { account, databases, ID } from "./config/appwriteConfig";
+import { databases, ID } from "./config/appwriteConfig";
 import { useAuth } from "./context/AuthProvider";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -7,6 +7,7 @@ import { Query } from "appwrite";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { MdEditCalendar } from "react-icons/md";
 import { MdDelete } from "react-icons/md";
+import { type Models } from 'appwrite';
 
 export default function HabitDetails() {
   const { user } = useAuth();
@@ -19,27 +20,31 @@ export default function HabitDetails() {
 
   const [description, setDescription] = useState("");
 
-  const [errorValue, setErrorValue] = useState(null);
+  const [errorValue, setErrorValue] = useState<string | null>(null);
 
   const [selectedDayId, setSelectedDayId] = useState("");
 
-  async function fetchHabitDetails() {
+  async function fetchHabitDetails(): Promise<Models.DocumentList<Models.Document>> {
     try {
+      if (!id) {
+        throw new Error("Habit Id is invalid");
+      }
+
       const response = await databases.listDocuments(
         "67b0bdc9002836425c2f",
         "67b12fed0007cd299fe3",
         [Query.equal("habitId", id), Query.orderDesc('date'), Query.equal("year", String(currentYear))]
       );
 
-      return response.documents;
+      return response;
     } catch (error) {
       console.error(error);
+      throw new Error((error as Error).message);
     }
   }
 
   const {
     data: habitDetails,
-    error,
     isPending,
     refetch,
   } = useQuery({
@@ -47,7 +52,6 @@ export default function HabitDetails() {
     queryFn: fetchHabitDetails,
   });
 
-  console.log(habitDetails);
 
   async function commitDay() {
     if (!user) return; // Ensure user is logged in before adding habit
@@ -56,17 +60,10 @@ export default function HabitDetails() {
         return;
       }
 
-      if (habitDetails?.filter((habit) => habit.date === dateValue).length > 0) {
+      if (habitDetails?.documents && habitDetails?.documents.filter((habit) => habit.date === dateValue).length > 0) {
         return;
       }
-      console.log({
-        name: location?.state?.name,
-        date: dateValue,
-        completed: true,
-        habitId: id,
-        description: description,
-        year: String(currentYear)
-      })
+
       const response = await databases.createDocument(
         "67b0bdc9002836425c2f",
         "67b12fed0007cd299fe3",
@@ -84,7 +81,7 @@ export default function HabitDetails() {
       return response;
     } catch (error) {
       console.error(error);
-      throw new Error(error.message);
+      throw new Error((error as Error).message);
     }
   }
 
@@ -95,14 +92,14 @@ export default function HabitDetails() {
       refetch();
     },
     onError: (error) => {
-      setErrorValue(error.message);
+      setErrorValue((error as Error).message);
       setTimeout(() => {
         setErrorValue(null);
       }, 3000);
     }
   });
 
-  async function editCommit({ documentId, dateValue, description }) {
+  async function editCommit({ documentId, dateValue, description }: { documentId: string, dateValue: string, description: string }) {
     if (!user) return; // Ensure user is logged in before adding habit
     try {
       const response = await databases.updateDocument(
@@ -114,11 +111,11 @@ export default function HabitDetails() {
           description: description
         }
       );
-      // console.log(response);
+      
       return response;
     } catch (error) {
       console.error(error);
-      throw new Error(error.message);
+      throw new Error((error as Error).message);
     }
   }
 
@@ -130,7 +127,7 @@ export default function HabitDetails() {
       refetch();
     },
     onError: (error) => {
-      setErrorValue(error.message);
+      setErrorValue((error as Error).message);
       setTimeout(() => {
         setErrorValue(null);
       }, 3000);
@@ -163,7 +160,7 @@ export default function HabitDetails() {
         const date =
           dateArr[dateArr.length - 1] + "-" + month + "-" + dayOfMonth;
 
-        const isCompleted = habitDetails?.some((habit) => habit.date === date);
+        const isCompleted = habitDetails?.documents?.some((habit) => habit.date === date);
 
         weekSquares.push(
           <li
@@ -172,7 +169,7 @@ export default function HabitDetails() {
           >
             <span className="tooltiptext flex flex-col gap-2">
               <span>{currentDate.toDateString()}</span>
-              <span>{habitDetails?.find(e => e?.date == date)?.description}</span>
+              <span>{habitDetails?.documents?.find(e => e?.date == date)?.description}</span>
             </span>
           </li>
         );
@@ -192,21 +189,25 @@ export default function HabitDetails() {
     let streak = 0;
     let largestStreak = 0;
 
-    for (let i = 0; i < habitDetails?.length - 1; i++) {
-      const currentDate = new Date(habitDetails[i].date);
-      const nextDate = new Date(habitDetails[i + 1].date);
+    if (!habitDetails?.documents) {
+      return
+    }
+
+    for (let i = 0; i < habitDetails?.documents?.length - 1; i++) {
+      const currentDate = new Date(habitDetails?.documents[i].date);
+      const nextDate = new Date(habitDetails?.documents[i + 1].date);
 
       const timeDifference = nextDate.getTime() - currentDate.getTime();
       const oneDay = 1000 * 60 * 60 * 24;
 
       if (
         timeDifference <= oneDay &&
-        habitDetails[i].completed &&
-        habitDetails[i + 1].completed
+        habitDetails.documents?.[i].completed &&
+        habitDetails.documents?.[i + 1].completed
       ) {
         streak++;
       } else {
-        if (habitDetails[i].completed) {
+        if (habitDetails.documents[i].completed) {
           streak++;
           largestStreak = Math.max(streak, largestStreak);
         }
@@ -215,8 +216,9 @@ export default function HabitDetails() {
     }
 
     if (
-      habitDetails?.length > 0 &&
-      habitDetails[habitDetails.length - 1].completed
+      habitDetails?.documents &&
+      habitDetails?.documents?.length > 0 &&
+      habitDetails?.documents?.[habitDetails?.documents?.length - 1].completed
     ) {
       streak++;
       largestStreak = Math.max(streak, largestStreak);
@@ -274,7 +276,7 @@ export default function HabitDetails() {
                   </tr>
                 </thead>
                 <tbody>
-                  {habitDetails && habitDetails.slice(0, 30).map((habit, index) => {
+                  {habitDetails && habitDetails.documents.slice(0, 30).map((habit) => {
                     return (
                       <tr key={habit.$id} className="bg-base-200">
                         <th>{habit.date}</th>
@@ -283,7 +285,7 @@ export default function HabitDetails() {
                           setDateValue(habit.date);
                           setDescription(habit.description);
                           setSelectedDayId(habit.$id);
-                          document.getElementById('my_modal_3').showModal()
+                          (document.getElementById('my_modal_3') as HTMLDialogElement)?.showModal()
                         }} className="cursor-pointer h-5 w-5 text-primary" /></td>
                         <td><MdDelete onClick={async () => {
                           try {
@@ -294,7 +296,7 @@ export default function HabitDetails() {
                             )
                             refetch();
                           } catch (error) {
-                            setErrorValue(error.message);
+                            setErrorValue((error as Error).message);
                             setTimeout(() => {
                               setErrorValue(null);
                             }, 3000);
@@ -376,7 +378,7 @@ export default function HabitDetails() {
             <div className="stat">
               <div className="stat-title">Total Tracking Days</div>
               <div className="stat-value">
-                {habitDetails ? habitDetails?.length : 0}
+                {habitDetails ? habitDetails?.documents?.length : 0}
               </div>
             </div>
 
@@ -392,8 +394,8 @@ export default function HabitDetails() {
           <section className="flex items-center justify-between space-x-4 mb-8">
 
             <div className="flex items-center space-x-4">
-              <button className="btn btn-primary" onClick={()=>document.getElementById('my_modal_1').showModal()}>Commit</button>
-              <button className="btn btn-secondary" onClick={()=>document.getElementById('my_modal_2').showModal()}>History</button>
+              <button className="btn btn-primary" onClick={()=>(document.getElementById('my_modal_1') as HTMLDialogElement).showModal()}>Commit</button>
+              <button className="btn btn-secondary" onClick={()=>(document.getElementById('my_modal_2') as HTMLDialogElement).showModal()}>History</button>
             </div>
 
             <div className="flex items-center space-x-4">
