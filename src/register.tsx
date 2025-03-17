@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { account, ID } from "./config/appwriteConfig";
 import { Link, Navigate } from "react-router";
 import { useAuth } from "./context/AuthProvider";
