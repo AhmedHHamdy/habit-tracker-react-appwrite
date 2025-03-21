@@ -1,7 +1,7 @@
 # Habit Tracker - React & Appwrite
 [Project](https://habit-tracker-react-appwrite.vercel.app/)
 ## Overview
-
+ 
 Habit Tracker is a simple yet powerful application designed to help users build and track their habits over time. Inspired by the GitHub commit system, this app visualizes your daily progress by marking each day you successfully complete a habit. The app is built using **React** for the frontend and **Appwrite** for the backend, including authentication and database management.
 
 With this app, you can:
